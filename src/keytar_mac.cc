@@ -61,6 +61,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& password,
                              std::string* error,
                              bool returnNonfatalOnDuplicate) {
+  SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
                                                   service.length(),
                                                   service.data(),
@@ -68,7 +69,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                                                   account.data(),
                                                   password.length(),
                                                   password.data(),
-                                                  NULL);
+                                                  &item_ref);
  
   if (status == errSecDuplicateItem && returnNonfatalOnDuplicate) {
     return FAIL_NONFATAL;
@@ -77,16 +78,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
     return FAIL_ERROR;
   }
   //If successfully added,remove AlwaysAllow
-  SecKeychainItemRef item_ref;
   CFArrayRef applicationList=CFArrayCreate (NULL,NULL,0,NULL);
-  OSStatus result = SecKeychainFindGenericPassword(NULL,
-                                                   service.length(),
-                                                   service.data(),
-                                                   account.length(),
-                                                   account.data(),
-                                                   NULL,
-                                                   NULL,
-                                                   &item_ref);
   SecAccessRef accessref;
   // Create a access ref object with no Trusted apps
   CFStringRef description=CFStringCreateWithCString(NULL, "Anurag's Keytar", kCFStringEncodingASCII);
@@ -98,8 +90,8 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
   CFRelease(applicationList);
   CFRelease(description);
   if (status != 0) 
-	return FAIL_NONFATAL;
-  return SUCCESS;
+	return FAIL_ERROR;
+  return FAIL_ERROR;
 }
 
 KEYTAR_OP_RESULT SetPassword(const std::string& service,
