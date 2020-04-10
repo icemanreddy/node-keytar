@@ -7,21 +7,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atom/node-keytar.git"
+    "url": "https://github.com/icemanreddy/node-keytar.git"
   },
-  "bugs": {
-    "url": "https://github.com/atom/node-keytar/issues"
-  },
-  "homepage": "http://atom.github.io/node-keytar",
-  "keywords": [
-    "keychain",
-    "password",
-    "passwords",
-    "credential",
-    "credentials",
-    "vault",
-    "credential vault"
-  ],
   "files": [
     "lib",
     "src",
