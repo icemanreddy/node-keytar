@@ -53,7 +53,9 @@ const std::string errorStatusToString(OSStatus status) {
   CFRelease(errorMessageString);
   return errorStr;
 }
-
+//https://developer.apple.com/documentation/security/seckeychainpromptselector?language=objc
+//https://developer.apple.com/documentation/security/1400997-secaclsetcontents?language=objc
+//https://developer.apple.com/documentation/security/keychain_services/access_control_lists?language=objc
 KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& account,
                              const std::string& password,
@@ -67,14 +69,36 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                                                   password.length(),
                                                   password.data(),
                                                   NULL);
-
+ 
   if (status == errSecDuplicateItem && returnNonfatalOnDuplicate) {
     return FAIL_NONFATAL;
   } else if (status != errSecSuccess) {
     *error = errorStatusToString(status);
     return FAIL_ERROR;
   }
-
+  //If successfully added,remove AlwaysAllow
+  SecKeychainItemRef item_ref;
+  CFArrayRef applicationList=CFArrayCreate (NULL,NULL,0,NULL);
+  OSStatus result = SecKeychainFindGenericPassword(NULL,
+                                                   service.length(),
+                                                   service.data(),
+                                                   account.length(),
+                                                   account.data(),
+                                                   NULL,
+                                                   NULL,
+                                                   &item_ref);
+  SecAccessRef accessref;
+  // Create a access ref object with no Trusted apps
+  CFStringRef description=CFStringCreateWithCString(NULL, "Anurag's Keytar", kCFStringEncodingASCII);
+  result = SecAccessCreate(description,applicationList,&accessref);
+  //Sets the access of a keychain item "item_ref".
+  result = SecKeychainItemSetAccess(item_ref,accessref);
+  CFRelease(item_ref);
+  CFRelease(accessref);
+  CFRelease(applicationList);
+  CFRelease(description);
+  if (status != 0) 
+	return FAIL_NONFATAL;
   return SUCCESS;
 }
 
