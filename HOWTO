@@ -1,0 +1,6 @@
+Type ".help" for more information.
+> const keytar= require('keytar');
+undefined
+> keytar.findCredentials('KeytarTest', 'AccountName1').then((result)=>{ console.log(result);});
+Promise { <pending> }
+> []
