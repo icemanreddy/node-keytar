@@ -61,6 +61,8 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& password,
                              std::string* error,
                              bool returnNonfatalOnDuplicate) {
+  os_log("Anurag's loggin", log: OSLog.default, type: .info)
+
   SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
                                                   service.length(),
