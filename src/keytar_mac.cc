@@ -61,6 +61,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& password,
                              std::string* error,
                              bool returnNonfatalOnDuplicate) {
+  return FAIL_ERROR;
   SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
                                                   service.length(),
