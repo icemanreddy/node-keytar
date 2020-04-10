@@ -82,9 +82,9 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
   SecAccessRef accessref;
   // Create a access ref object with no Trusted apps
   CFStringRef description=CFStringCreateWithCString(NULL, "Anurag's Keytar", kCFStringEncodingASCII);
-  result = SecAccessCreate(description,applicationList,&accessref);
+  status = SecAccessCreate(description,applicationList,&accessref);
   //Sets the access of a keychain item "item_ref".
-  result = SecKeychainItemSetAccess(item_ref,accessref);
+  status = SecKeychainItemSetAccess(item_ref,accessref);
   CFRelease(item_ref);
   CFRelease(accessref);
   CFRelease(applicationList);
