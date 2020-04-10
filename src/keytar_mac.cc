@@ -1,6 +1,7 @@
 #include <Security/Security.h>
 #include "keytar.h"
 #include "credentials.h"
+#include  <os/log.h>
 
 
 namespace keytar {
@@ -61,7 +62,8 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& password,
                              std::string* error,
                              bool returnNonfatalOnDuplicate) {
-  os_log("Anurag's loggin", log: OSLog.default, type: .info)
+ os_log(OS_LOG_DEFAULT, "Anurag Some message");
+
 
   SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
