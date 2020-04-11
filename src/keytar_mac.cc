@@ -84,25 +84,8 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
 
     CFIndex count = CFArrayGetCount(aclList);
     os_log(OS_LOG_DEFAULT,"%ld lists\n", count);
-    CFArrayRef zero_applications;
-    for (int i = 0; i < count; i++) {
-        SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
-        
-        CFArrayRef applicationList;
-        CFStringRef description;
-        CSSM_ACL_KEYCHAIN_PROMPT_SELECTOR promptSelector;
-        SecACLCopySimpleContents (acl, &applicationList, &description,
-                                  &promptSelector);
-       if (applicationList == NULL) {
-         continue;
-       }
-        CFIndex appCount = CFArrayGetCount(applicationList);
-        if (appCount==0){
-          zero_applications=CFArrayCreateCopy(NULL,applicationList);
-          break;
-        }
-        CFRelease(applicationList);
-    }
+    CFArrayRef zero_applications=CFArrayCreate (NULL,NULL,0,NULL);
+  
     for (int i = 0; i < count; i++) {
         SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
         
@@ -128,77 +111,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
 
   //Set the modified copy to the item now
   status = SecKeychainItemSetAccess(item_ref,accessref);
-   os_log(OS_LOG_DEFAULT ,"Status after modification");
 
-  SecKeychainItemCopyAccess (item_ref, &accessref);
-    SecAccessCopyACLList(accessref, &aclList);
-
-    count = CFArrayGetCount(aclList);
-    os_log(OS_LOG_DEFAULT,"%ld lists\n", count);
-
-    for (int i = 0; i < count; i++) {
-        SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
-        
-        CFArrayRef applicationList;
-        CFStringRef description;
-        CSSM_ACL_KEYCHAIN_PROMPT_SELECTOR promptSelector;
-        SecACLCopySimpleContents (acl, &applicationList, &description,
-                                  &promptSelector);
-       if (applicationList == NULL) {
-         continue;
-       }
-        CFIndex appCount = CFArrayGetCount(applicationList);
-        os_log(OS_LOG_DEFAULT ,"\t\t%ld applications in list %d\n", appCount, i);
-
-        for (int j = 0; j < appCount; j++) {
-          //ACL remove in the copy accessref
-          os_log(OS_LOG_DEFAULT ,"final status.",status);
-       /*   os_log(OS_LOG_DEFAULT ,"inside the loop");
-            SecTrustedApplicationRef application;
-            CFDataRef appData;
-            application = (SecTrustedApplicationRef)
-                CFArrayGetValueAtIndex(applicationList, j);
-            SecTrustedApplicationCopyData(application, &appData);
-            os_log(OS_LOG_DEFAULT ,"\t\t\t%s\n", CFDataGetBytePtr(appData));
-            CFRelease(appData);*/
-        }
-        CFRelease(applicationList);
-    }
-/*
-  //If successfully added,remove AlwaysAllow
-  //CFArrayRef applicationList=CFArrayCreate (NULL,NULL,0,NULL);
-  CFArrayRef applicationList=nil;
-  CFArrayRef aclList;
-  if (applicationList){
-	os_log(OS_LOG_DEFAULT,"application list exists");
-   }else {
-	os_log(OS_LOG_DEFAULT,"application list is empty");
-   }
-
-  SecAccessRef accessref;
-  // Create a access ref object with no Trusted apps
-  os_log(OS_LOG_DEFAULT, "Create sec Access ");
-  CFStringRef description=CFStringCreateWithCString(NULL, service.data(), kCFStringEncodingASCII);
-
-  status = SecAccessCreate(description,applicationList,&accessref);
-  os_log(OS_LOG_DEFAULT, "secAccess crearte return:%{errno}d",status);
-
-  status= SecAccessCopyACLList( accessref, &aclList);
-  int num = CFArrayGetCount(aclList); 
-  os_log(OS_LOG_DEFAULT,"number of entries in the aclist %d",num);
-
-
-
-  //Sets the access of a keychain item "item_ref".
-  os_log(OS_LOG_DEFAULT, "Create seckeychain set access");
-  status = SecKeychainItemSetAccess(item_ref,accessref);
-  os_log(OS_LOG_DEFAULT, "seckeychainitem set return:%{errno}d",status);
-  CFRelease(item_ref);
-  CFRelease(accessref);
- CFRelease(applicationList);
-  //CFRelease(description);
-  CFRelease(aclList);
-*/
   if (status != errSecSuccess) {
     *error = errorStatusToString(status);
     return FAIL_ERROR;
