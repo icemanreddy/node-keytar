@@ -54,14 +54,11 @@ const std::string errorStatusToString(OSStatus status) {
   CFRelease(errorMessageString);
   return errorStr;
 }
-//https://developer.apple.com/documentation/security/seckeychainpromptselector?language=objc
-//https://developer.apple.com/documentation/security/1400997-secaclsetcontents?language=objc
-//https://developer.apple.com/documentation/security/keychain_services/access_control_lists?language=objc
+
 KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& account,
                              const std::string& password,
-                             std::string* error){
-
+                             std::string* error) {
   SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
                                                   service.length(),
@@ -71,22 +68,21 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                                                   password.length(),
                                                   password.data(),
                                                   &item_ref);
-  
+
     SecAccessRef accessref;
-    SecKeychainItemCopyAccess (item_ref, &accessref);
+    SecKeychainItemCopyAccess(item_ref, &accessref);
     CFArrayRef aclList;
     SecAccessCopyACLList(accessref, &aclList);
 
     CFIndex count = CFArrayGetCount(aclList);
-    CFArrayRef zero_applications=CFArrayCreate (NULL,NULL,0,NULL);
-  
+    //Array with 0 Applications / Empty Array . Not the same as passing NULL
+    CFArrayRef zero_applications = CFArrayCreate(NULL, NULL, 0, NULL);
     for (int i = 0; i < count; i++) {
         SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
-        
         CFArrayRef applicationList;
         CFStringRef description;
         CSSM_ACL_KEYCHAIN_PROMPT_SELECTOR promptSelector;
-        SecACLCopySimpleContents (acl, &applicationList, &description,
+        SecACLCopySimpleContents(acl, &applicationList, &description,
                                   &promptSelector);
        if (applicationList == NULL) {
          continue;
@@ -94,14 +90,15 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
         CFIndex appCount = CFArrayGetCount(applicationList);
 
         for (int j = 0; j < appCount; j++) {
-          status= SecACLSetContents(acl,zero_applications,description,1);
+          status= SecACLSetContents(acl, zero_applications, description, 1);
+          break;
         }
         CFRelease(applicationList);
         CFRelease(description);
     }
 
-  //Set the modified copy to the item now
-  status = SecKeychainItemSetAccess(item_ref,accessref);
+  // Set the modified copy to the item now
+  status = SecKeychainItemSetAccess(item_ref, accessref);
 
   if (status != errSecSuccess) {
     *error = errorStatusToString(status);
