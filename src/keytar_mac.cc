@@ -61,8 +61,6 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& account,
                              const std::string& password,
                              std::string* error){
- os_log(OS_LOG_DEFAULT, "Entered Add password");
-
 
   SecKeychainItemRef item_ref;
   OSStatus status = SecKeychainAddGenericPassword(NULL,
@@ -73,9 +71,6 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                                                   password.length(),
                                                   password.data(),
                                                   &item_ref);
-
-
-  os_log(OS_LOG_DEFAULT,"debug_Errno:%{errno}d",status);
   
     SecAccessRef accessref;
     SecKeychainItemCopyAccess (item_ref, &accessref);
@@ -83,7 +78,6 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
     SecAccessCopyACLList(accessref, &aclList);
 
     CFIndex count = CFArrayGetCount(aclList);
-    os_log(OS_LOG_DEFAULT,"%ld lists\n", count);
     CFArrayRef zero_applications=CFArrayCreate (NULL,NULL,0,NULL);
   
     for (int i = 0; i < count; i++) {
@@ -98,15 +92,12 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
          continue;
        }
         CFIndex appCount = CFArrayGetCount(applicationList);
-        os_log(OS_LOG_DEFAULT ,"\t\t%ld applications in list %d\n", appCount, i);
 
         for (int j = 0; j < appCount; j++) {
           status= SecACLSetContents(acl,zero_applications,description,1);
-          //ACL modify in the copy accessref
-          os_log(OS_LOG_DEFAULT ,"modified acl.status: %{errno}d",status);
-       
         }
         CFRelease(applicationList);
+        CFRelease(description);
     }
 
   //Set the modified copy to the item now
@@ -116,7 +107,8 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
     *error = errorStatusToString(status);
     return FAIL_ERROR;
   }
-
+  CFRelease(item_ref);
+  CFRelease(accessref);
   return SUCCESS;
 }
 
