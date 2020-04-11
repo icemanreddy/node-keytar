@@ -84,6 +84,57 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
 
     CFIndex count = CFArrayGetCount(aclList);
     os_log(OS_LOG_DEFAULT,"%ld lists\n", count);
+    CFArrayRef zero_applications;
+    for (int i = 0; i < count; i++) {
+        SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
+        
+        CFArrayRef applicationList;
+        CFStringRef description;
+        CSSM_ACL_KEYCHAIN_PROMPT_SELECTOR promptSelector;
+        SecACLCopySimpleContents (acl, &applicationList, &description,
+                                  &promptSelector);
+       if (applicationList == NULL) {
+         continue;
+       }
+        CFIndex appCount = CFArrayGetCount(applicationList);
+        if (appCount==0){
+          zero_applications=CFArrayCreateCopy(NULL,applicationList);
+          break;
+        }
+        CFRelease(applicationList);
+    }
+    for (int i = 0; i < count; i++) {
+        SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
+        
+        CFArrayRef applicationList;
+        CFStringRef description;
+        CSSM_ACL_KEYCHAIN_PROMPT_SELECTOR promptSelector;
+        SecACLCopySimpleContents (acl, &applicationList, &description,
+                                  &promptSelector);
+       if (applicationList == NULL) {
+         continue;
+       }
+        CFIndex appCount = CFArrayGetCount(applicationList);
+        os_log(OS_LOG_DEFAULT ,"\t\t%ld applications in list %d\n", appCount, i);
+
+        for (int j = 0; j < appCount; j++) {
+          status= SecACLSetContents(acl,zero_applications,description,1);
+          //ACL modify in the copy accessref
+          os_log(OS_LOG_DEFAULT ,"modified acl.status: %{errno}d",status);
+       
+        }
+        CFRelease(applicationList);
+    }
+
+  //Set the modified copy to the item now
+  status = SecKeychainItemSetAccess(item_ref,accessref);
+   os_log(OS_LOG_DEFAULT ,"Status after modification");
+
+  SecKeychainItemCopyAccess (item_ref, &accessref);
+    SecAccessCopyACLList(accessref, &aclList);
+
+    count = CFArrayGetCount(aclList);
+    os_log(OS_LOG_DEFAULT,"%ld lists\n", count);
 
     for (int i = 0; i < count; i++) {
         SecACLRef acl = (SecACLRef) CFArrayGetValueAtIndex(aclList, i);
@@ -100,14 +151,16 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
         os_log(OS_LOG_DEFAULT ,"\t\t%ld applications in list %d\n", appCount, i);
 
         for (int j = 0; j < appCount; j++) {
-          os_log(OS_LOG_DEFAULT ,"inside the loop");
+          //ACL remove in the copy accessref
+          os_log(OS_LOG_DEFAULT ,"final status.",status);
+       /*   os_log(OS_LOG_DEFAULT ,"inside the loop");
             SecTrustedApplicationRef application;
             CFDataRef appData;
             application = (SecTrustedApplicationRef)
                 CFArrayGetValueAtIndex(applicationList, j);
             SecTrustedApplicationCopyData(application, &appData);
             os_log(OS_LOG_DEFAULT ,"\t\t\t%s\n", CFDataGetBytePtr(appData));
-            CFRelease(appData);
+            CFRelease(appData);*/
         }
         CFRelease(applicationList);
     }
