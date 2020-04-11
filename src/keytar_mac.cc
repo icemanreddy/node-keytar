@@ -62,7 +62,7 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                              const std::string& password,
                              std::string* error,
                              bool returnNonfatalOnDuplicate) {
- os_log(OS_LOG_DEFAULT, "Anurag Some message");
+ os_log(OS_LOG_DEFAULT, "Entered Add password");
 
 
   SecKeychainItemRef item_ref;
@@ -74,27 +74,52 @@ KEYTAR_OP_RESULT AddPassword(const std::string& service,
                                                   password.length(),
                                                   password.data(),
                                                   &item_ref);
- 
+  os_log(OS_LOG_DEFAULT,"debug_Errno:%{errno}d",status);
   if (status == errSecDuplicateItem && returnNonfatalOnDuplicate) {
+    os_log(OS_LOG_DEFAULT, "1");
     return FAIL_NONFATAL;
   } else if (status != errSecSuccess) {
+    os_log(OS_LOG_DEFAULT, "2");
     *error = errorStatusToString(status);
     return FAIL_ERROR;
   }
   //If successfully added,remove AlwaysAllow
   CFArrayRef applicationList=CFArrayCreate (NULL,NULL,0,NULL);
+  CFArrayRef aclList;
+  if (applicationList){
+	os_log(OS_LOG_DEFAULT,"application list exists");
+   }else {
+	os_log(OS_LOG_DEFAULT,"application list is empty");
+   }
+
   SecAccessRef accessref;
   // Create a access ref object with no Trusted apps
+  os_log(OS_LOG_DEFAULT, "Create sec Access ");
   CFStringRef description=CFStringCreateWithCString(NULL, "Anurag's Keytar", kCFStringEncodingASCII);
+
   status = SecAccessCreate(description,applicationList,&accessref);
+  os_log(OS_LOG_DEFAULT, "secAccess crearte return:%{errno}d",status);
+
+  status= SecAccessCopyACLList( accessref, &aclList);
+  int num = CFArrayGetCount(aclList); 
+  os_log(OS_LOG_DEFAULT,"number of entries in the aclist %d",num);
+
+
+
   //Sets the access of a keychain item "item_ref".
+  os_log(OS_LOG_DEFAULT, "Creae seckeychain set access");
   status = SecKeychainItemSetAccess(item_ref,accessref);
+  os_log(OS_LOG_DEFAULT, "seckeychainitem set return:%{errno}d",status);
   CFRelease(item_ref);
   CFRelease(accessref);
-  CFRelease(applicationList);
+ CFRelease(applicationList);
   CFRelease(description);
-  if (status != 0) 
+  CFRelease(aclList);
+  if (status != 0) {
+  	os_log(OS_LOG_DEFAULT, "error?/");
 	return FAIL_NONFATAL;
+  }
+  os_log(OS_LOG_DEFAULT, "SUCCESSSSS");
   return SUCCESS;
 }
 
@@ -102,6 +127,7 @@ KEYTAR_OP_RESULT SetPassword(const std::string& service,
                              const std::string& account,
                              const std::string& password,
                              std::string* error) {
+   os_log(OS_LOG_DEFAULT, "Add called from set");
   KEYTAR_OP_RESULT result = AddPassword(service, account, password,
                                         error, true);
   if (result == FAIL_NONFATAL) {
@@ -110,6 +136,7 @@ KEYTAR_OP_RESULT SetPassword(const std::string& service,
     if (delResult == FAIL_ERROR)
       return FAIL_ERROR;
     else
+       os_log(OS_LOG_DEFAULT, "Add calleed from else of set");
       return AddPassword(service, account, password, error, false);
   } else if (result == FAIL_ERROR) {
     return FAIL_ERROR;
