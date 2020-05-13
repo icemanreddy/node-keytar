@@ -39,7 +39,7 @@
     "prebuild": "^10.0.0"
   },
   "dependencies": {
-    "nan": "2.14.0",
+    "nan": "2.14.1",
     "prebuild-install": "5.3.3"
   }
 }
